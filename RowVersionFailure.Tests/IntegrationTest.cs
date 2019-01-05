@@ -54,15 +54,28 @@ namespace RowVersionFailure.Tests
         {
             var client = CreateClient();
 
-            var response = client.Get(new GetCustomer { Id = Customer.Id  });
+			var post = new PostCustomer
+			{
+				FirstName = "James",
+				LastName = "Olsen",
+				Street = "Lansdowne Road",
+				ProvinceOrState = "Leinster",
+				City = "Dublin",
+				Country = "Ireland",
+			};
 
-            //Assert.That(response.Result, Is.EqualTo("Hello, World!"));
+			var customer = client.Post(post);
+			var put = post.ConvertTo<PutCustomer>();
+			put.Id = customer.Id; // don't set the row version to force an optimisitc concurrency exception
+
+			var customer2 = client.Put(put);
+            Assert.That(customer2.Id, Is.EqualTo(customer.Id));
         }
 
         // This fails with Message: System.InvalidOperationException : The current SynchronizationContext may not be used as a TaskScheduler.
         // Commenting out the RowVersion property will make this work or removing the async keyword, awaits and calling sync methods
         [SetUp]
-        public async Task BootStrap()
+        public void BootStrap()
         {
             using (var db = appHost.Resolve<IDbConnectionFactory>().Open())
             {
@@ -72,7 +85,7 @@ namespace RowVersionFailure.Tests
                     LastName = "Schmidt",
                 };
 
-                await db.SaveAsync(Customer);
+                db.Save(Customer);
 
                 Address = new Address
                 {
@@ -83,7 +96,7 @@ namespace RowVersionFailure.Tests
                     CustomerId = Customer.Id
                 };
 
-                await db.SaveAsync(Address);
+                db.Save(Address);
 
                 Order = new CustomerOrder
                 {
@@ -91,7 +104,7 @@ namespace RowVersionFailure.Tests
                     Details = "Random Order"
                 };
 
-                await db.SaveAsync(Order);
+                db.Save(Order);
             }
         }
     }

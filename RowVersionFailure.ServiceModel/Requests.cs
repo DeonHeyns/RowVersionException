@@ -15,7 +15,20 @@ namespace RowVersionFailure.ServiceModel
         public ulong RowVersion { get; set; }
     }
 
-    [Route("/customer", "GET")]
+	[Route("/customer", "PUT")]
+	public class PutCustomer : IReturn<Customer>
+	{
+		public long Id { get; set; }
+		public string FirstName { get; set; }
+		public string LastName { get; set; }
+		public string Street { get; set; }
+		public string City { get; set; }
+		public string ProvinceOrState { get; set; }
+		public string Country { get; set; }
+		public ulong RowVersion { get; set; }
+	}
+
+	[Route("/customer", "GET")]
     public class GetCustomer : IReturn<Customer>
     {
         public long Id { get; set; }
